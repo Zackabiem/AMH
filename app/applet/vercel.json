@@ -1,0 +1,10 @@
+{
+  "framework": "vite",
+  "rewrites": [
+    { "source": "/api/catalog-data", "destination": "/api/products/feed" },
+    { "source": "/api/catalog-clear", "destination": "/api/products/clear-cache" },
+    { "source": "/api/estate-data", "destination": "/api/properties/feed" },
+    { "source": "/api/estate-clear", "destination": "/api/properties/clear-cache" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

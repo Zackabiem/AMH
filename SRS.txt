@@ -1,0 +1,186 @@
+SOFTWARE REQUIREMENTS SPECIFICATION (SRS)
+PROJECT: AFRICAN MARKET HUB (AMH)
+VERSION: 1.0.0
+DATE: 2026-04-01
+
+1. INTRODUCTION
+-------------------------------------------------------------------------------
+1.1 Purpose
+The purpose of this document is to provide a comprehensive description of the African Market Hub (AMH) platform. It outlines the functional and non-functional requirements, system architecture, and detailed module logic.
+
+1.2 Project Scope
+AMH is a "Discovery-First" Super App platform designed for the African market. It integrates a marketplace, transport/logistics discovery, property discovery, and a secure manual payment verification system. It prioritizes verified enterprise entities while supporting individual service providers.
+
+1.3 Target Audience
+- Developers and System Architects
+- Project Stakeholders
+- Quality Assurance Teams
+
+2. SYSTEM ARCHITECTURE
+-------------------------------------------------------------------------------
+2.1 Tech Stack (Serverless Enterprise Architecture)
+- Frontend: React 19, Vite, Tailwind CSS, Lucide Icons, Framer Motion (Hosted on Vercel).
+- Backend API: Vercel Serverless Functions (`/api` directory) for secure logic and integrations.
+- Database & Auth: Supabase (PostgreSQL, GoTrue Auth).
+- Realtime: Supabase Realtime (WebSockets) for live chat, presence, and instant notifications.
+- Public Storage (Media CDN): Cloudinary for product listings and public images (automatic optimization).
+- Private Storage (Vault): Supabase Storage for KYC and sensitive documents (secured via RLS).
+- Caching & Rate Limiting: Upstash Valkey / Redis (protects database, sub-millisecond responses).
+- Background Workers: Upstash QStash (handles heavy tasks like emails and bulk processing without long-running servers).
+
+2.2 Data Flow Logic
+- Real-time synchronization using Supabase Realtime (Postgres Changes).
+- Client-side state management using React Hooks and Context API.
+- Server-side processing via Vercel Serverless Functions for sensitive financial transactions and cache invalidation.
+- Read-Through Caching: High-traffic queries hit Upstash Valkey first; cache misses fetch from Supabase and populate Valkey.
+- Background Jobs: Vercel API triggers Upstash QStash to process heavy workloads asynchronously.
+
+3. FUNCTIONAL MODULES
+-------------------------------------------------------------------------------
+3.1 User Management & Authentication
+- Authentication: Email/Password and Google OAuth via Supabase Auth.
+- Unified Login Portal (Auth.tsx):
+    - Personal Tab: Standard login and registration for individual users.
+    - Staff / Team Tab: Dedicated login for enterprise employees. Hides registration (staff must be invited) and enforces strict Role-Based Access Control (RBAC).
+- Role-Based Access Control (RBAC):
+    - Buyer: Default role for all users.
+    - Seller: Can manage stores and products.
+    - Transporter: Can accept and manage delivery jobs.
+    - Property Owner: Can list and manage real estate.
+    - Admin: Platform-wide oversight and KYC approval.
+- Enterprise RBAC (business_members table):
+    - When a user logs in via the "Staff / Team" tab, the system verifies their `user_id` against the `business_members` table.
+    - Access is denied if no active staff profile is found, preventing unauthorized access to company workspaces.
+- Profile Management: Personal info, bank details (Bank Name, Account Number), and notification preferences.
+
+3.2 Marketplace Module
+- Product Listings: Search, filter by category, and view detailed product info.
+- Store System: Businesses can own multiple stores with independent branding.
+- Saved Items: Users can wishlist products for later.
+- Reviews & Ratings: Verified purchase feedback system.
+
+3.3 Checkout & Payment Module (Manual Flow)
+- Order Creation: Generates a unique "MH-" reference code.
+- Manual Payment: 
+    - Buyer views Seller's bank details.
+    - Buyer makes an external bank transfer.
+    - Buyer submits their Account Number as a reference.
+- Verification: Seller reviews the account number against their bank statement and manually confirms the order.
+
+3.4 Transport & Logistics Module (Discovery Feed & Dashboard)
+- Discovery Feed (TransportFeeds): A buyer-facing interface to browse and book transport services.
+- Enterprise vs. Individual Toggle: Users can switch between viewing verified Transport Companies (Parks) and Individual Dispatchers/Carriers.
+- Business Profiles: Detailed landing pages for Transport Parks (TransportBusinessProfile) showcasing routes, fleet size, and reviews.
+- Enterprise Dashboard (TransporterDashboard):
+    - Dynamic UI: Adapts based on whether the user is an individual driver or an enterprise company (`isEnterprise` flag).
+    - Branch Management: Companies can add and manage physical branches/parks (saved to `stores` table).
+    - Team Management: Companies can invite existing users via email to join their team (saved to `business_members` table).
+- Job Posting: Automatically triggered by orders or manually created.
+- Transporter Bidding/Assignment: Transporters can view and accept available jobs.
+- Tracking: Real-time status updates (Pending, In-Transit, Delivered).
+
+3.5 Property Module (Discovery Feed & Dashboard)
+- Discovery Feed (PropertyFeeds): A real estate marketplace for browsing properties and agencies.
+- Verified Agencies: A featured horizontal scroll highlighting registered real estate companies.
+- Agency Profiles: Dedicated landing pages for Property Agencies (PropertyAgencyProfile) showcasing their full portfolio and credentials.
+- Enterprise Dashboard (PropertyDashboard):
+    - Dynamic UI: Adapts based on whether the user is an individual owner or a registered agency.
+    - Portfolio Management: Overview and management of all listed properties.
+    - Team Management: Agencies can invite agents and managers via email (saved to `business_members` table).
+- Listings: View and list properties for rent or sale.
+- Features: Detailed property attributes (location, price, features).
+
+3.6 Communication Module
+- Real-time Chat: Direct messaging between buyers, sellers, and transporters.
+- Notifications: In-app alerts for order updates, messages, and system news.
+
+3.7 Finance & Commission Module
+- Commission Ledger: Tracks platform fees (typically 1%) on every transaction.
+- Debt Threshold: If a seller's debt exceeds a set threshold (e.g., $50), their listings are automatically hidden.
+- Manual Debt Settlement: Sellers pay the platform via bank transfer to Zenith Bank and submit payment proof (Account Number) to unlock their account.
+
+4. DATABASE SCHEMA (SUPABASE/POSTGRES)
+-------------------------------------------------------------------------------
+- users: Core profile and RBAC data.
+- businesses: Legal business entities.
+- stores: Retail outlets associated with businesses.
+- products: Inventory items.
+- orders: Transaction records and status.
+- jobs: Logistics and delivery records.
+- properties: Real estate data.
+- messages/conversations: Chat history.
+- commission_ledger: Financial tracking.
+- notifications: User-specific alerts.
+- kyc_applications: Identity verification records.
+
+5. NON-FUNCTIONAL REQUIREMENTS
+-------------------------------------------------------------------------------
+5.1 Security
+- Row Level Security (RLS) enforced on all Supabase tables.
+- Secure manual payment flow to prevent automated fraud.
+- Upstash Rate Limiting to prevent DDoS and spam.
+- Strict separation of public media (Cloudinary) and private PII (Supabase Storage).
+
+5.2 Performance & Scalability
+- Designed to scale to 650 Million Users using Serverless Edge infrastructure.
+- Staggered data fetching to handle Supabase lock contention.
+- Upstash Valkey caching layer to absorb high-traffic spikes and reduce database load.
+- Cloudinary automatic image optimization and global CDN delivery.
+- Lazy loading of heavy components and responsive design for Mobile, Tablet, and Desktop.
+
+5.3 Reliability
+- Robust retry mechanisms for network and authentication errors.
+- Upstash QStash for guaranteed background job execution and retries.
+- Mount guards to prevent state updates on unmounted components.
+
+6. LOGIC & WORKFLOWS
+-------------------------------------------------------------------------------
+6.1 Order Lifecycle
+Pending Payment -> Payment Review (Manual) -> Paid -> Processing -> Shipped -> Delivered.
+
+6.2 Account Locking Logic
+Total Debt > Lock Threshold = Account Locked (Listings Hidden).
+Payment Verified -> Debt Reduced -> Total Debt < Lock Threshold = Account Unlocked.
+
+6.3 KYC Workflow
+User Submits Data -> Verification Center (Dashboard) -> Admin Reviews -> Approved -> Role Activated.
+
+6.3.1 Seller KYC Process
+- Individual Seller:
+  - Identity: Legal Name, ID Type (National ID, Passport, Voter's Card), ID Number, ID Document Upload.
+  - Store Details: Store Name, Business Category, Address, Country, State, City, Proof of Address Upload.
+  - Payout Details: Bank Name, Account Number, Account Name.
+- Registered Business (Enterprise):
+  - Business Details: Legal Name, Business Type, Registration/CAC Number, Email, Phone, Headquarters Address.
+  - Option to convert an existing store to a business entity.
+
+6.3.2 Transporter KYC Process
+- Registration Type Selection: Individual Dispatcher vs. Transport Company (Enterprise).
+- Individual Dispatcher:
+  - Step 1: Identity & Selfie: Legal Name, Phone, ID Type, ID Number, ID Document Upload, Live Selfie/Profile Photo, Residential Address.
+  - Step 2: Driver Credentials: Driver's License Number, Expiry Date, Driver's License Upload (Front & Back).
+  - Step 3: Vehicle Information: Vehicle Type, Make & Model, License Plate, Vehicle Color, Registration Document Upload, Insurance Document Upload, Vehicle Photo Upload.
+  - Step 4: Guarantor: Guarantor Name, Phone Number, Relationship.
+  - Step 5: Payout Details: Bank Name, Account Number, Account Name.
+- Transport Company (Enterprise):
+  - Business Details: Business Name, Business Description, Main Park Location, Business Logo, Business Address, Agency License.
+  - Plus standard identity and payout requirements.
+
+6.3.3 Property Owner KYC Process
+- Registration Type Selection: Individual Owner vs. Property Agency (Enterprise).
+- Individual Owner:
+  - Step 1: Identity: Legal Name, Phone, ID Type, ID Number, ID Document Upload, Live Selfie/Profile Photo, Residential Address, Proof of Address.
+  - Step 2: Professional Details (Optional): Real Estate Association Name, Membership ID/Certificate Upload.
+  - Step 3: Guarantors (High Security): Requires 3 separate guarantors. For each: Name, Phone, Email, and a signed Consent Letter Upload.
+  - Step 4: Payout Details: Bank Name, Account Number, Account Name.
+- Property Agency (Enterprise):
+  - Agency Details: Agency Name, Agency Description, Agency License Number, Agency Logo, Agency Address.
+  - Plus standard identity and payout requirements.
+
+6.4 Key Functions & Data Flow
+- Unified Authentication (`handleLogin` in `Auth.tsx`):
+  - Flow: User enters credentials -> `supabase.auth.signInWithPassword` -> If `accountType === 'staff'`, queries `business_members` table -> If no active record, signs user out and throws "Access Denied".
+- Enterprise Branch Creation (`handleAddBranch` in Dashboards):
+  - Flow: Admin submits branch details -> Inserts into `stores` table with `owner_type='business'` and `business_type='Transport Branch'` (or Property Branch) -> Updates local state to reflect new branch.
+- Enterprise Staff Invitation (`handleAddStaff` in Dashboards):
+  - Flow: Admin enters staff email -> Queries `users` table to verify account exists -> If exists, inserts into `business_members` linking `user_id`, `business_id`, `role`, and `store_id` -> Updates local state.

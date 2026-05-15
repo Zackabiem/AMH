@@ -1,0 +1,26 @@
+# Legal Disclaimers Tracking
+
+This file tracks the legal warnings and disclaimers added to the Africa Market Hub application.
+
+## 1. Transporter Liability Clause
+**Text:** "Transporters operate independently. Africa Market Hub is not responsible for lost, stolen, or damaged goods."
+**Locations:**
+- Transport Booking Screen (`src/components/TransportBusinessProfile.tsx`): Added as a warning box and a required checkbox before confirming a booking in the Request Transporter modal.
+- Transporter Signup Page (`src/components/BecomeTransporterModal.tsx`): Added as a required checkbox in the Guarantor step and a disclaimer in the Payout step.
+
+## 2. Property Ownership Clause
+**Text:** "Africa Market Hub does not verify ownership of listed properties. Users must conduct due diligence before making payment."
+**Locations:**
+- Property Details Page (`src/components/PropertyAgencyProfile.tsx`): Added as a warning box right above the "Message" button.
+- Property Upload/Signup Page (`src/components/BecomePropertyOwnerModal.tsx`): Added as a warning box in the Payout step so property owners accept responsibility.
+
+## 3. Business Staff Responsibility Clause
+**Text:** "Business owners are responsible for actions of their staff accounts."
+**Locations:**
+- Business Add Staff Page (`src/components/dashboard/PropertyDashboard.tsx`): Added as an info box when creating a staff login.
+- Business Registration Page (`src/components/BusinessOnboarding.tsx`): Added as a required checkbox in the Review & Submit step.
+
+## 4. Transporter Guarantor Clause
+**Text:** "Transporters may be required to provide guarantor details for accountability."
+**Locations:**
+- Transporter KYC Page (`src/components/BecomeTransporterModal.tsx`): Added as an info box in the Guarantor section.
