@@ -1,12 +1,7 @@
 <div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
+
 </div>
 
-# Run and deploy your AI Studio app
-
-This contains everything you need to run your app locally.
-
-View your app in AI Studio: https://ai.studio/apps/aae52f4a-065a-4aea-bdd3-a3979f0afd34
 
 ## Run Locally
 
@@ -15,6 +10,15 @@ View your app in AI Studio: https://ai.studio/apps/aae52f4a-065a-4aea-bdd3-a3979
 
 1. Install dependencies:
    `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+2. Add variable to .env
+`UPSTASH_REDIS_REST_TOKEN` = 
+`EXCHANGERATE_API_KEY` = 
+`PROJECT_NAME` = 
+`VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY` = 
+`CLOUDINARY_API_SECRET` = 
+`PROJECT_ID` = 
+`VITE_CLOUDINARY_CLOUD_NAME` = 
+`VITE_SUPABASE_URL` = 
+`DATABASE_URL`= 
 3. Run the app:
    `npm run dev`
