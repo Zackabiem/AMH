@@ -6,10 +6,14 @@ const getEnv = (key: string) => {
 };
 
 const supabaseUrl = getEnv('VITE_SUPABASE_URL') || 
+  getEnv('SUPABASE_URL') ||
+  getEnv('NEXT_PUBLIC_SUPABASE_URL') ||
   ((getEnv('VITE_PROJECT_ID') || getEnv('PROJECT_ID')) ? `https://${getEnv('VITE_PROJECT_ID') || getEnv('PROJECT_ID')}.supabase.co` : 'https://placeholder.supabase.co');
 
 const supabaseAnonKey = getEnv('VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY') || 
   getEnv('VITE_SUPABASE_ANON_KEY') || 
+  getEnv('SUPABASE_ANON_KEY') ||
+  getEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY') ||
   'placeholder';
 
 if (supabaseUrl === 'https://placeholder.supabase.co' || supabaseAnonKey === 'placeholder') {
