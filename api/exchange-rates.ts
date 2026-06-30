@@ -27,7 +27,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .single();
 
     if (dbError && dbError.code !== 'PGRST116') { // PGRST116 is "Rows not found"
-      console.warn('DB check error for exchange rates:', dbError);
+      const detailsStr = String(dbError.details || dbError.message || JSON.stringify(dbError) || '');
+      if (detailsStr.includes('getaddrinfo') || detailsStr.includes('ENOTFOUND') || detailsStr.includes('fetch failed')) {
+        console.warn(`[Supabase Connection Warning] Unable to resolve or connect to Supabase database host "${supabaseUrl}". Your Supabase project might be paused by Supabase (free tier projects pause automatically after a period of inactivity) or the configured project URL is incorrect. Details:`, dbError.message || dbError);
+      } else {
+        console.warn('DB check error for exchange rates:', dbError);
+      }
     }
 
     const existing = existingData;

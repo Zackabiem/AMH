@@ -58,7 +58,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       message: 'Cleanup successful', 
       deletedCount: expiredIds.length 
     });
-  } catch (error) {
+  } catch (error: any) {
+    const errorStr = String(error?.details || error?.message || error || '');
+    if (errorStr.includes('getaddrinfo') || errorStr.includes('ENOTFOUND') || errorStr.includes('fetch failed')) {
+      console.warn(`[Supabase Connection Warning] Status cleanup skipped because the Supabase database host "${supabaseUrl}" is unreachable. Please verify if your Supabase project is paused or check your network connectivity.`);
+      return res.status(503).json({ 
+        error: 'Service Unavailable', 
+        message: 'The Supabase database is currently unreachable. If this is a free-tier project, please check if it was paused on Supabase.' 
+      });
+    }
     console.error('Error during status cleanup:', error);
     return res.status(500).json({ error: 'Internal Server Error' });
   }
